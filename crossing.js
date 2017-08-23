@@ -2,13 +2,14 @@
   'use strict';
   // Provides utilities to deal with website/app urls. Provides functionality
   // for deep-linking Ajax calls, and a url mapper to generate dynamic urls.
-  function crossing(nameMatcher) {
+  function crossing(nameMatcher, ignoreTrailingSlash) {
     if (!(this instanceof crossing)) {
       throw new Error('Crossing can not be called without instatiation. Please use "new Crossing()" instead');
     }
     this._urls = {};
     this._compiled = {};
     this._lastHash = '';
+    this._ignoreTrailingSlash = !!ignoreTrailingSlash;
     if (nameMatcher) {
       this._nameMatcher = nameMatcher;
     } else {
@@ -48,9 +49,11 @@
   // {'taskEdit': '/task/edit/<taskId>/', 'taskCreate': '/task/create/'}
   // @return {Object} this for method chaining
   crossing.prototype.load = function(urls) {
+    var endMatcher = this._ignoreTrailingSlash ? '/?$' : '$';
+
     for (var url in urls) {
       if (urls.hasOwnProperty(url)) {
-        this._compiled[url] = new RegExp('^' + urls[url].replace(this._nameMatcher, "([^\/]+?)") + '$');
+        this._compiled[url] = new RegExp('^' + urls[url].replace(this._nameMatcher, "([^\/]+?)") + '$' + endMatcher);
       }
     }
     this._urls = urls;
@@ -63,16 +66,17 @@
 
     if (kwargs) {
       var args = path.match(matcher);
-
-      for (var i = 0; i < args.length; i++) {
-        var match = args[i];
-        var arg = match.replace(matcher, '$1');
-
-        if (typeof kwargs[arg] === 'undefined') {
-          throw new Error('Missing parameter (' + arg + ') for ' + name);
+      if (args) {
+        for (var i = 0; i < args.length; i++) {
+          var match = args[i];
+          var arg = match.replace(matcher, '$1');
+  
+          if (typeof kwargs[arg] === 'undefined') {
+            throw new Error('Missing parameter (' + arg + ') for ' + name);
+          }
+  
+          path = path.replace(match, kwargs[arg]);
         }
-
-        path = path.replace(match, kwargs[arg]);
       }
     }
 
