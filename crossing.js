@@ -50,7 +50,7 @@
   crossing.prototype.load = function(urls) {
     for (var url in urls) {
       if (urls.hasOwnProperty(url)) {
-        this._compiled[url] = new RegExp('^' + urls[url].replace(this._nameMatcher, "([a-zA-Z0-9-_%]{0,})") + '$');
+        this._compiled[url] = new RegExp('^' + urls[url].replace(this._nameMatcher, "([^\/]+?)") + '$');
       }
     }
     this._urls = urls;
